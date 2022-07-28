@@ -11,6 +11,9 @@ var corrx = 0
 var corry = 0
 var repeat = 255
 var tilenum = 0
+var region = 0
+var persistence = .5
+var regper = .7
 export var res = 40
 var cell = 16
 var gradtable = [151,160,137,91,90,15,131,13,201,95,96,53,194,233,7,225,140,36,103,
@@ -47,9 +50,11 @@ func _ready():
 	corry = floor(get_viewport().size.y/cell/2)
 	for i in range (backsizex):
 		for j in range (backsizey):
-			tilenum = octave(float(i)/res,float(j)/res)
-			print(tilenum)
-			$Backgroundmap.set_cell(i,j,tileassign(tilenum))
+			tilenum = octave(float(i)/res,float(j)/res,persistence)
+			#print(tilenum)
+			region = octave(float(i)/(res*10),float(j)/(res*10),regper)
+			#print(region)
+			$Backgroundmap.set_cell(i,j,tileassign(tilenum,region))
 
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
@@ -63,26 +68,30 @@ func _physics_process(delta):
 	if(tileposx > oldtileposx):
 		var i = tileposy-backsizey/2-2 
 		while i < tileposy + backsizey/2 + 2:
-			tilenum = octave(float(tileposx+backsizex/2)/res,float(i)/res)
-			$Backgroundmap.set_cell(tileposx+backsizex/2,i,tileassign(tilenum))
+			tilenum = octave(float(tileposx+backsizex/2)/res,float(i)/res,persistence)
+			region = octave(float(tileposx+backsizex/2)/(res*10),float(i)/(res*10),regper)
+			$Backgroundmap.set_cell(tileposx+backsizex/2,i,tileassign(tilenum,region))
 			i += 1
 	if(tileposx < oldtileposx):
 		var i = tileposy-backsizey/2-2 
 		while i < tileposy + backsizey/2 + 2:
-			tilenum = octave(float(tileposx-backsizex/2)/res,float(i)/res)
-			$Backgroundmap.set_cell(tileposx-backsizex/2-1,i,tileassign(tilenum))
+			tilenum = octave(float(tileposx-backsizex/2)/res,float(i)/res,persistence)
+			region = octave(float(tileposx-backsizex/2)/(res*10),float(i)/(res*10),regper)
+			$Backgroundmap.set_cell(tileposx-backsizex/2-1,i,tileassign(tilenum,region))
 			i += 1
 	if(tileposy > oldtileposy):
 		var i = tileposx-backsizex/2-2 
 		while i < tileposx + backsizex/2 + 2:
-			tilenum = octave(float(i)/res,float(tileposy+backsizey/2)/res)
-			$Backgroundmap.set_cell(i,tileposy+backsizey/2,tileassign(tilenum))
+			tilenum = octave(float(i)/res,float(tileposy+backsizey/2)/res,persistence)
+			region = octave(float(i)/(res*10),float(tileposy+backsizey/2)/(res*10),regper)
+			$Backgroundmap.set_cell(i,tileposy+backsizey/2,tileassign(tilenum,region))
 			i += 1
 	if(tileposy < oldtileposy):
 		var i = tileposx-backsizex/2-2 
 		while i < tileposx + backsizex/2 + 2:
-			tilenum = octave(float(i)/res,float(tileposy-backsizey/2)/res)
-			$Backgroundmap.set_cell(i,tileposy-backsizey/2-1,tileassign(tilenum))
+			tilenum = octave(float(i)/res,float(tileposy-backsizey/2)/res,persistence)
+			region = octave(float(i)/(res*10),float(tileposy-backsizey/2)/(res*10),regper)
+			$Backgroundmap.set_cell(i,tileposy-backsizey/2-1,tileassign(tilenum,region))
 			i += 1
 	
 	oldtileposx = tileposx
@@ -159,36 +168,47 @@ func perlin(x,y):
 	return(x3)
 	
 
-func octave(x, y):
+func octave(x, y, z):
 	var amplitude = 1
-	var persistence = .5
 	var maxval = 0
 	var oct = 6
 	var output = 0
 	for i in range (oct):
 		output += perlin(x*pow(2,i),y*pow(2,i))*amplitude
 		maxval += amplitude
-		amplitude *= persistence
+		amplitude *= z
 	output *= 1/maxval
 	return(output)
 	
 
-func tileassign(x):
-	if(x < -0.4):
-		return(0)
-	elif(x < -0.2):
-		return(1)
-	elif(x < -0.1):
-		return(2)
-	elif(x < 0):
-		return(3)
-	elif(x < 0.1):
-		return(4)
-	elif(x < 0.2):
-		return(5)
-	elif(x < 0.3):
-		return(6)
-	elif(x < 0.4):
-		return(7)
+func tileassign(x,y):
+	if(y < 0.1):
+		if(x < -0.4):
+			return(0)
+		elif(x < -0.1):
+			return(1)
+		elif(x < -0.05):
+			return(2)
+		elif(x < 0):
+			return(3)
+		elif(x < 0.1):
+			return(4)
+		elif(x < 0.2):
+			return(5)
+		elif(x < 0.3):
+			return(6)
+		elif(x < 0.4):
+			return(7)
+		else:
+			return(8)
 	else:
-		return(8)
+		if(x < -0.4):
+			return(1)
+		elif(x < -0.3):
+			return(3)
+		elif(x < 0.2):
+			return(2)
+		elif(x < 0.4):
+			return(6)
+		else:
+			return(7)
